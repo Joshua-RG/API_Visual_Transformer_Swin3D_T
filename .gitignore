@@ -1,0 +1,30 @@
+# Entorno virtual de Python
+venv_api/
+
+# Caché y archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración de IDE y OS
+.vscode/
+.idea/
+.DS_Store
+
+# Excluir los archivos del modelo (pesados)
+model_api/onnx_model/*.onnx
+model_api/onnx_model/*.data
+
+# Excluir el contenido de las carpetas de datos generados y pruebas
+# Usamos '*' para ignorar todos los archivos dentro de estas carpetas
+model_api/data/clips_guardados/*
+model_api/data/logs_eventos/*
+model_api/data/videos_prueba/*
+
+# EXCEPCIÓN: No ignorar los archivos .gitkeep
+# Esto es necesario para que Git pueda rastrear las carpetas aunque estén vacías.
+# Deberás crear un archivo .gitkeep vacío en cada una de las 3 carpetas de arriba.
+!model_api/data/clips_guardados/.gitkeep
+!model_api/data/logs_eventos/.gitkeep
+!model_api/data/videos_prueba/.gitkeep
