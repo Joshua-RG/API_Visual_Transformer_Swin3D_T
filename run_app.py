@@ -171,6 +171,9 @@ def main(
 
 # ... (todo tu código anterior: imports, get_video_files, main) ...
 
+# ESTO ES UNA PRUEBA PARA UNA CAMARA Y UN VIDEO ELEGIDO MANUALMENTE Y HARDCODEADO, 
+# SI QUIERES LA PRUEBA PARA VARIAS CAMARAS DESCOMENTA LO DE ARRIBA :P
+
 if __name__ == "__main__":
     
     # 1. Establecer el método de 'spawn' PRIMERO.
