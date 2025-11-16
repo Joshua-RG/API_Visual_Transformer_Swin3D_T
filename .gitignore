@@ -14,6 +14,7 @@ __pycache__/
 
 # Excluir los archivos del modelo (pesados)
 model_api/onnx_model/*.onnx
+model_api/onnx_model/person_detector/*.onnx
 model_api/onnx_model/*.data
 
 # Excluir el contenido de las carpetas de datos generados y pruebas

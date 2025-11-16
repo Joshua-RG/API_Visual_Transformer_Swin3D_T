@@ -82,13 +82,21 @@ def main(
             print(f"Iniciando worker para cámara: {cam['id']}...")
             worker = multiprocessing.Process(
                 target=run_camera_worker,
+                
+                # --- INICIO DE LA MODIFICACIÓN ---
+                # Le pasamos la 'results_queue' al worker para que pueda
+                # hacer el "bypass" y enviar resultados [0,0,0]
+                # directamente al EventManager cuando no haya personas.
                 args=(
                     cam["id"],
                     cam["type"],
                     cam["path"], # Le pasamos la LISTA de videos
                     inference_queue,
-                    control_queues[cam["id"]]
+                    control_queues[cam["id"]],
+                    results_queue  # <-- ¡AQUÍ ESTÁ EL AÑADIDO!
                 ),
+                # --- FIN DE LA MODIFICACIÓN ---
+                
                 daemon=True
             )
             worker.start()
@@ -122,37 +130,84 @@ def main(
         print("Servicios detenidos. Saliendo.")
 
 
+#if __name__ == "__main__":
+#    
+#    # 1. Establecer el método de 'spawn' PRIMERO.
+#    # Esto es crucial para CUDA y Windows para evitar 'deadlocks'.
+#    multiprocessing.set_start_method("spawn")
+#
+#    # 2. Configurar la prueba
+#    # Esta lógica solo se ejecuta 1 vez en el proceso principal.
+#    print("--- Configurando la prueba de 4 cámaras ---")
+#    
+#    CAMERA_IDS = ["cam_01", "cam_02", "cam_03", "cam_04"]
+#    VIDEO_DIR_PATH = os.path.join(config.BASE_DIR, "data", "videos_prueba")
+#
+#    # Escanear y dividir los 554 videos de prueba
+#    video_lists_for_cameras = get_video_files(VIDEO_DIR_PATH, num_cameras=len(CAMERA_IDS))
+#
+#    # Crear la configuración de las cámaras
+#    CAMERAS_TO_RUN = []
+#    for i, camera_id in enumerate(CAMERA_IDS):
+#        if i < len(video_lists_for_cameras) and len(video_lists_for_cameras[i]) > 0:
+#            cam_config = {
+#                "id": camera_id,
+#                "type": "file", # Usamos el FileReader
+#                "path": video_lists_for_cameras[i]
+#            }
+#            CAMERAS_TO_RUN.append(cam_config)
+#            print(f"Configurada '{camera_id}' con {len(cam_config['path'])} videos únicos.")
+#        else:
+#            print(f"ADVERTENCIA: No se asignaron videos a '{camera_id}'.")
+#
+#    # 3. Crear las Colas de Comunicación
+#    inference_queue = multiprocessing.Queue()
+#    results_queue = multiprocessing.Queue()
+#    control_queues = {cam["id"]: multiprocessing.Queue() for cam in CAMERAS_TO_RUN}
+#    print("Colas de comunicación creadas.")
+#    
+#    # 4. Iniciar la función 'main' con la configuración lista
+#    main(CAMERAS_TO_RUN, inference_queue, results_queue, control_queues)
+
+# ... (todo tu código anterior: imports, get_video_files, main) ...
+
 if __name__ == "__main__":
     
     # 1. Establecer el método de 'spawn' PRIMERO.
-    # Esto es crucial para CUDA y Windows para evitar 'deadlocks'.
     multiprocessing.set_start_method("spawn")
 
-    # 2. Configurar la prueba
-    # Esta lógica solo se ejecuta 1 vez en el proceso principal.
-    print("--- Configurando la prueba de 4 cámaras ---")
+    # --- 2. Configuración de la Prueba (MODIFICADO) ---
+    print("--- Configurando la prueba de 1 cámara (video sin violencia) ---")
     
-    CAMERA_IDS = ["cam_01", "cam_02", "cam_03", "cam_04"]
-    VIDEO_DIR_PATH = os.path.join(config.BASE_DIR, "data", "videos_prueba")
+    # --- ¡CAMBIA ESTA LÍNEA! ---
+    # (Asegúrate de que este sea el nombre exacto de tu video de prueba)
+    VIDEO_DE_PRUEBA_PATH = os.path.join(
+        config.BASE_DIR, "data", "videos_prueba", "vid_107.avi"
+    )
 
-    # Escanear y dividir los 554 videos de prueba
-    video_lists_for_cameras = get_video_files(VIDEO_DIR_PATH, num_cameras=len(CAMERA_IDS))
+    if not os.path.exists(VIDEO_DE_PRUEBA_PATH):
+        print(f"ERROR: No se encuentra el video de prueba en: {VIDEO_DE_PRUEBA_PATH}")
+        print("Por favor, edita la variable 'VIDEO_DE_PRUEBA_PATH' en run_app.py")
+        sys.exit(1)
 
-    # Crear la configuración de las cámaras
-    CAMERAS_TO_RUN = []
-    for i, camera_id in enumerate(CAMERA_IDS):
-        if i < len(video_lists_for_cameras) and len(video_lists_for_cameras[i]) > 0:
-            cam_config = {
-                "id": camera_id,
-                "type": "file", # Usamos el FileReader
-                "path": video_lists_for_cameras[i]
-            }
-            CAMERAS_TO_RUN.append(cam_config)
-            print(f"Configurada '{camera_id}' con {len(cam_config['path'])} videos únicos.")
-        else:
-            print(f"ADVERTENCIA: No se asignaron videos a '{camera_id}'.")
+    # Desactivamos la lógica de 4 cámaras
+    # CAMERA_IDS = ["cam_01", "cam_02", "cam_03", "cam_04"]
+    # VIDEO_DIR_PATH = os.path.join(config.BASE_DIR, "data", "videos_prueba")
+    # video_lists_for_cameras = get_video_files(VIDEO_DIR_PATH, num_cameras=len(CAMERA_IDS))
 
-    # 3. Crear las Colas de Comunicación
+    # Creamos la configuración de las cámaras manualmente
+    CAMERAS_TO_RUN = [
+        {
+            "id": "cam_01",
+            "type": "file", # Usamos el FileReader
+            "path": [VIDEO_DE_PRUEBA_PATH] # Le pasamos una lista con un solo video
+        }
+    ]
+    
+    print(f"Configurada 'cam_01' con el video: {VIDEO_DE_PRUEBA_PATH}")
+
+    # --- 3. Crear las Colas de Comunicación ---
+    # (Esta lógica es idéntica, pero solo creará una control_queue)
     inference_queue = multiprocessing.Queue()
     results_queue = multiprocessing.Queue()
     control_queues = {cam["id"]: multiprocessing.Queue() for cam in CAMERAS_TO_RUN}
